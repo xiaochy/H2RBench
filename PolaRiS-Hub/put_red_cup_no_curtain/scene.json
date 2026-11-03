@@ -1,0 +1,47 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "asset_1773721493433_vw7yy2rnn",
+      "name": "workspace_static",
+      "mainFile": "workspace_static/meshes.usdz",
+      "position": {
+        "x": 3.3880604246687516,
+        "y": 0.7822225859302029,
+        "z": -2.1794718707244303
+      },
+      "rotation": {
+        "x": -3.141592653589793,
+        "y": 0.9898213361333452,
+        "z": -3.141592653589793
+      },
+      "scale": {
+        "x": 1,
+        "y": 1,
+        "z": 1
+      },
+      "disableGravity": true
+    },
+    {
+      "id": "asset_1773721632065_pghrxo2yf",
+      "name": "red_cup",
+      "mainFile": "red_cup/mesh_v1.usdz",
+      "position": {
+        "x": 0.758936697969954,
+        "y": 0.08099449347577437,
+        "z": 0
+      },
+      "rotation": {
+        "x": 0,
+        "y": 0,
+        "z": 0
+      },
+      "scale": {
+        "x": 0.3,
+        "y": 0.3,
+        "z": 0.3
+      },
+      "disableGravity": false
+    }
+  ]
+}

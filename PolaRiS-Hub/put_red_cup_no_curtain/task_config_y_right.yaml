@@ -1,0 +1,48 @@
+task: mug_pick_and_place
+
+object_randomization:
+  red_cup:
+    # absolute position
+    x: [[0.5, 0.75], [0.60, 0.75],[0.5, 0.75]]
+    y: [[0.1319, 0.21577]]
+    z: [[0.06730355860016474, 0.06730355860016474], [0.06730355860016474, 0.06730355860016474] ,[0.06730355860016474, 0.06730355860016474] ]
+    # relative rot
+    ori_x: [0, 0]               # fixed upright
+    ori_y: [0, 0]               # fixed upright
+    ori_z: [-0.4, 0.4]    # full yaw rotation
+  blue_plate:
+    # absolute position
+    x: [[0.42021682190000004, 0.42021682190000004]]
+    y: [[-0.020943, -0.020943]]
+    z: [[0.04213426742302829, 0.04213426742302829]]
+    # relative rot
+    ori_x: [0, 0]               # fixed upright
+    ori_y: [0, 0]               # fixed upright
+    ori_z: [0, 0]    # full yaw rotation
+
+waypoints:
+  - object: red_cup
+    offset: [0.0, -0.05, 0.1]       # move
+    rel_quat: [0.0, 1.0, 0.0, 0.0]   # w x y z
+    grasp: 0
+    subgoal: False
+  - object: red_cup
+    offset: [0.0, -0.05, -0.02]     # pregrasp
+    rel_quat: [0.0, 1.0, 0.0, 0.0]
+    grasp: 0
+    subgoal: True
+  - object: red_cup/blue_plate
+    offset: [0.0, 0.0, 0.2]       # lift
+    rel_quat: [0.0, 1.0, 0.0, 0.0]
+    grasp: 1
+    subgoal: False
+  - object: blue_plate
+    offset: [0.0, -0.08, 0.02]       # preplace
+    rel_quat: [0.0, 1.0, 0.0, 0.0]
+    grasp: 1
+    subgoal: True
+  - object: blue_plate
+    offset: [0.0, 0.0, 0.2]       # lift
+    rel_quat: [0.0, 1.0, 0.0, 0.0]
+    grasp: 0
+    subgoal: False

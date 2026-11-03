@@ -1,0 +1,145 @@
+_target_: diffusion_policy.workspace.train_diffusion_unet_hybrid_workspace.TrainDiffusionUnetHybridWorkspace
+
+name: train_diffusion_unet_hybrid
+task_name: pick_red_mug
+exp_name: default
+
+horizon: 16
+n_obs_steps: 2
+n_action_steps: 8
+n_latency_steps: 0
+dataset_obs_steps: 2
+past_action_visible: false
+keypoint_visible_rate: 1.0
+obs_as_global_cond: true
+
+shape_meta:
+  obs:
+    image:
+      shape: [3, 240, 426]   # [C, H, W] — matches video resolution
+      type: rgb
+    agent_pos:
+      shape: [10]             # pos(3) + rot6d(6) + gripper(1)
+      type: low_dim
+  action:
+    shape: [10]
+
+policy:
+  _target_: diffusion_policy.policy.diffusion_unet_hybrid_image_policy.DiffusionUnetHybridImagePolicy
+  shape_meta: ${shape_meta}
+  horizon: ${horizon}
+  n_obs_steps: ${n_obs_steps}
+  n_action_steps: ${n_action_steps}
+  obs_as_global_cond: ${obs_as_global_cond}
+  # UNet architecture
+  down_dims: [256, 512, 1024]
+  kernel_size: 5
+  n_groups: 8
+  diffusion_step_embed_dim: 128
+  cond_predict_scale: true
+  # Image encoder
+  obs_encoder_group_norm: true
+  eval_fixed_crop: true
+  crop_shape: [216, 384]    # ~90% of 240x426
+  # Noise scheduler
+  noise_scheduler:
+    _target_: diffusers.schedulers.scheduling_ddpm.DDPMScheduler
+    num_train_timesteps: 100
+    beta_schedule: squaredcos_cap_v2
+    beta_start: 0.0001
+    beta_end: 0.02
+    clip_sample: true
+    prediction_type: epsilon
+    variance_type: fixed_small
+  num_inference_steps: 100
+
+ema:
+  _target_: diffusion_policy.model.diffusion.ema_model.EMAModel
+  update_after_step: 0
+  inv_gamma: 1.0
+  power: 0.75
+  min_value: 0.0
+  max_value: 0.9999
+
+task:
+  name: ${task_name}
+  shape_meta: ${shape_meta}
+  image_shape: [3, 240, 426]
+
+  dataset:
+    _target_: diffusion_policy.dataset.phantom_image_dataset.PhantomImageDataset
+    zarr_path: /project_data/held/vxiao/benchmark_new/task_data/whole_data/pick_red_mug.zarr
+    horizon: ${horizon}
+    pad_before: ${eval:'${n_obs_steps}-1+${n_latency_steps}'}
+    pad_after: ${eval:'${n_action_steps}-1'}
+    seed: 42
+    val_ratio: 0.02
+    max_train_episodes: null
+    demo_start_idx: null
+    demo_end_idx: null
+
+  env_runner:
+    _target_: diffusion_policy.env_runner.noop_image_runner.NoopImageRunner
+
+dataloader:
+  batch_size: 64
+  num_workers: 4
+  shuffle: true
+  pin_memory: true
+  persistent_workers: false
+
+val_dataloader:
+  batch_size: 64
+  num_workers: 4
+  shuffle: false
+  pin_memory: true
+  persistent_workers: false
+
+optimizer:
+  _target_: torch.optim.AdamW
+  lr: 1.0e-4
+  betas: [0.95, 0.999]
+  eps: 1.0e-8
+  weight_decay: 1.0e-6
+
+training:
+  device: cuda:0
+  seed: 42
+  debug: false
+  resume: true
+  lr_scheduler: cosine
+  lr_warmup_steps: 500
+  num_epochs: 3000
+  gradient_accumulate_every: 4
+  use_ema: true
+  rollout_every: 9999    # effectively never — no eval env
+  val_every: 1
+  sample_every: 5
+  checkpoint_every: 50
+  tqdm_interval_sec: 1.0
+  max_train_steps: null
+  max_val_steps: null
+
+logging:
+  project: diffusion_policy_debug
+  resume: true
+  mode: online
+  name: pick_red_mug
+  tags:
+    - train_diffusion_unet_hybrid
+    - pick_red_mug
+  id: null
+  group: null
+
+checkpoint:
+  topk:
+    monitor_key: val_loss
+    mode: min
+    k: 5
+    format_str: epoch={epoch:04d}-val_loss={val_loss:.3f}.ckpt
+  save_last_ckpt: true
+  save_last_snapshot: false
+
+multi_run:
+  run_dir: data/outputs/pick_red_mug
+  wandb_name_base: pick_red_mug
